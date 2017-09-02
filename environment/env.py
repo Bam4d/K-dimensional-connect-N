@@ -10,14 +10,12 @@ class Environment:
 
         self.K = len(dimension_configuration)
 
-        reorder = np.array([1, 0])
-        if self.K > 2:
-            reorder = np.append(np.array([1, 0]), np.arange(2, self.K))
-
-        self.dimension_configuration = dimension_configuration
+        self.dimension_configuration = np.array(dimension_configuration, dtype=np.uint32)
         self.N = N
 
-        self.state = np.zeros(dimension_configuration, dtype=np.uint8)
+        self.state = np.zeros(dimension_configuration, dtype=np.int8)
+
+        self.check_vectors = self.pre_calculate_check_line_vectors()
 
     def step(self, action, player):
         done = False
@@ -28,10 +26,13 @@ class Environment:
         entry_vector_shape = self.K - 1
         assert len(action) == entry_vector_shape, "entry vector must have length %d" % entry_vector_shape
 
-        token_location = np.sum(np.abs(self.state[:, action]))
-        self.state[token_location, action] = player
+        token_fall_coordinate = np.sum(np.abs(self.state[:, action]))
 
-        if self.check_for_win(player, token_location):
+        token_final_location = np.concatenate((np.array([token_fall_coordinate], dtype=np.int64), action))
+
+        self.state[np.expand_dims(token_final_location,1).tolist()] = player
+
+        if self.check_for_win(player, token_final_location):
             done = True
             reward = 200
 
@@ -48,37 +49,112 @@ class Environment:
     def state_shape(self):
         return self.dimension_configuration
 
-    """
-    This algorithm will look around the last place where a token was placed looking for a set of N of the same token
-    """
+    def reset(self):
+        self.state = np.zeros(self.dimension_configuration, dtype=np.uint8)
+
+
+
+    def pre_calculate_check_line_vectors(self):
+        """
+        This algorithm pre-calculates vectors to check for contiguous lines of a players tokens
+        We want to calculate this up-front (its very complex, at least O(n * 3^n) and re-use the generated list of vectors each time
+        """
+
+        def convert_to_vector(value, K):
+            """
+            Converts the value to base 3 and then swap "2" with "-1"
+            :param value:
+            :param K:
+            :return:
+            """
+            vector = np.zeros(K)
+            for k in range(0, K):
+                base3_power = 3 ** ((K - 1) - k)
+
+                a = int(value / base3_power)
+                value = value % base3_power
+
+                vector[k] = a if a < 2 else -1
+
+            return np.array(vector, dtype=np.int64)
+
+        vectors = []
+
+        for i in range(0, self.K):
+
+            take = 3 ** i
+            for j in range(0, take):
+                converted_vector = convert_to_vector(take + j, self.K)
+                vectors.append(converted_vector)
+
+        return vectors
+
+
     def check_for_win(self, player, last_token_location):
-
         """
-        Check calculate the sum of a line of tokens
-
-        O(N^2)
-
-        :param player:
-        :param last_token_location:
-        :return:
+        This algorithm will look around the last place where a token was placed looking for a set of N of the same token
         """
-        def check_line(last_token_location, increment_vector, required_sum):
 
-            start_location = last_token_location
-            for i in range(0, self.N):
-                token = start_location
-                sum = 0
-                for i in range(0, self.N):
-                    sum += self.state[np.expand_dims(token, axis=1)]
+        def is_valid_position_state(position):
+            return np.alltrue(position >= 0) \
+            and np.alltrue(self.dimension_configuration - (position) > 0)
 
-                    if required_sum == sum:
-                        return True
-                    token += increment_vector
 
-                start_location += increment_vector
+        def check_line(last_token_location, increment_vector, player):
+            """
+            Check calculate the sum of a line of tokens
+            """
 
-        required_sum = player*self.N
+            done = False
+            iters = 0
+            # Find the start point
+            start_point = np.copy(last_token_location)
+            while not done and iters != self.N-1:
+                next_position = start_point - increment_vector
+                if not is_valid_position_state(next_position):
+                    done = True
+                else:
+                    start_point = next_position
+                    iters += 1
 
-        ## Check line
+            iters = 0
+            done = False
+            # Find the end point
+            end_point = np.copy(last_token_location)
+            while not done and iters != self.N-1:
+                next_position = end_point + increment_vector
+                if not is_valid_position_state(next_position):
+                    done = True
+                else:
+                    end_point = next_position
+                    iters += 1
 
-        pass
+            done = False
+            # are there N in a row?
+            player_token_count = 0
+            check_point = np.copy(start_point)
+            while not done:
+
+                token = self.state[np.expand_dims(check_point, axis=1).tolist()]
+                if token == player:
+                    player_token_count += 1
+                else:
+                    player_token_count = 0
+
+                if player_token_count == self.N:
+                    return True
+
+                if np.alltrue(check_point==end_point):
+                    return False
+
+                check_point += increment_vector
+
+        ## The vectors to check for lines of N tokens
+        for v in self.check_vectors:
+            if check_line(last_token_location, v, player):
+                return True
+
+        return False
+
+
+
