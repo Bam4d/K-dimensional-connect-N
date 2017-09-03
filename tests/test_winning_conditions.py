@@ -1,9 +1,9 @@
 from pytest import fixture
-from environment import Environment
+from environment import KDimConnectN
 import numpy as np
 
 def test_check_for_win_2d_dim1():
-    env = Environment(dimension_configuration=(7,6), N=4)
+    env = KDimConnectN(dimension_configuration=(7,6), N=4)
 
     # gravity goes "up" with respect to how this array looks
     env.state = np.array([
@@ -34,7 +34,7 @@ def test_check_for_win_2d_dim1():
 
 
 def test_check_for_win_2d_dim2():
-    env = Environment(dimension_configuration=(7,6), N=4)
+    env = KDimConnectN(dimension_configuration=(7,6), N=4)
 
     # gravity goes "up" with respect to how this array looks
     env.state = np.array([
@@ -58,7 +58,7 @@ def test_check_for_win_2d_dim2():
     assert env.check_for_win(-1, (3, 3)) == False
 
 def test_check_for_win_2d_diag1():
-    env = Environment(dimension_configuration=(7, 6), N=4)
+    env = KDimConnectN(dimension_configuration=(7, 6), N=4)
 
     # gravity goes "up" with respect to how this array looks
     env.state = np.array([
@@ -81,7 +81,7 @@ def test_check_for_win_2d_diag1():
     assert env.check_for_win(-1, (0, 3)) == False
 
 def test_check_for_win_2d_diag2():
-    env = Environment(dimension_configuration=(7, 6), N=4)
+    env = KDimConnectN(dimension_configuration=(7, 6), N=4)
 
     # gravity goes "up" with respect to how this array looks
     env.state = np.array([
@@ -107,7 +107,7 @@ def test_check_for_win_2d_diag2():
     assert env.check_for_win(-1, (0, 0)) == False
 
 def test_check_for_win_3d_dim1():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 1, 1],
@@ -136,7 +136,7 @@ def test_check_for_win_3d_dim1():
     assert env.check_for_win(-1, (0, 0, 0)) == False
 
 def test_check_for_win_3d_dim2():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 0, 0],
@@ -165,7 +165,7 @@ def test_check_for_win_3d_dim2():
     assert env.check_for_win(-1, (0, 0, 0)) == False
 
 def test_check_for_win_3d_dim3():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 0, 0],
@@ -198,7 +198,7 @@ def test_check_for_win_3d_dim3():
     assert env.check_for_win(-1, (0, 0, 0)) == False
 
 def test_check_for_win_3d_diag1():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 0, 0],
@@ -231,7 +231,7 @@ def test_check_for_win_3d_diag1():
 
 
 def test_check_for_win_3d_diag2():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 0, 0],
@@ -261,7 +261,7 @@ def test_check_for_win_3d_diag2():
     assert env.check_for_win(-1, (1, 1, 1)) == False
 
 def test_check_for_win_3d_diag3():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 0, 0],
@@ -291,7 +291,7 @@ def test_check_for_win_3d_diag3():
     assert env.check_for_win(-1, (1, 1, 1)) == False
 
 def test_check_for_win_3d_diag3():
-    env = Environment(dimension_configuration=(3, 3, 3), N=3)
+    env = KDimConnectN(dimension_configuration=(3, 3, 3), N=3)
     env.state = np.array([
         [
             [1, 0, 0],
@@ -320,7 +320,7 @@ def test_check_for_win_3d_diag3():
     assert env.check_for_win(-1, (1, 1, 1)) == False
 
 def test_check_for_win_3d_4x4():
-    env = Environment(dimension_configuration=(4, 4, 4), N=4)
+    env = KDimConnectN(dimension_configuration=(4, 4, 4), N=4)
     env.state = np.array([
         [
             [1, 0, 0, 0],

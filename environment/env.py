@@ -1,6 +1,6 @@
 import numpy as np
 
-class Environment:
+class KDimConnectN:
 
     # Default is a 7 by 6 grid and 4 in a row to win
     # Second dimension is always the dimension in which the tokens "fall"
@@ -13,30 +13,52 @@ class Environment:
         self.dimension_configuration = np.array(dimension_configuration, dtype=np.uint32)
         self.N = N
 
+        self.total_steps = 0
+        self.max_steps = np.prod(dimension_configuration)
+
         self.state = np.zeros(dimension_configuration, dtype=np.int8)
 
         self.check_vectors = self.pre_calculate_check_line_vectors()
 
     def step(self, action, player):
         done = False
-        reward = 0.0
+        reward = -1
         # Update the state here
         assert np.abs(player) == 1, "player can only have value 1 or -1"
 
         entry_vector_shape = self.K - 1
         assert len(action) == entry_vector_shape, "entry vector must have length %d" % entry_vector_shape
 
-        token_fall_coordinate = np.sum(np.abs(self.state[:, action]))
+        # Had to find out how to do this on stack overflow
+        # https://stackoverflow.com/questions/46022514/dynamically-obtain-a-vector-along-1-dimension-in-n-dimensional-numpy-array
+        token_fall_coordinate = np.sum(np.abs(self.state[[slice(None)] +  action.tolist()]))
 
-        token_final_location = np.concatenate((np.array([token_fall_coordinate], dtype=np.int64), action))
+        # If the given action is not possible (the location is full) we set completed to False to let the agent
+        # know the move is not possible ... perhaps a negative reward here?
+        valid_move = True
+        if token_fall_coordinate >= self.dimension_configuration[0]:
+            valid_move = False
+        else:
 
-        self.state[np.expand_dims(token_final_location,1).tolist()] = player
+            # Reward for making a valid move ?
+            # reward = 1
 
-        if self.check_for_win(player, token_final_location):
-            done = True
-            reward = 200
+            token_final_location = np.concatenate((np.array([token_fall_coordinate], dtype=np.int64), action))
 
-        return self.state, reward, done, None
+            self.state[np.expand_dims(token_final_location,1).tolist()] = player
+
+            if self.check_for_win(player, token_final_location):
+                done = True
+
+                # Reward for winning
+                reward = 20
+
+            self.total_steps += 1
+            if self.total_steps >= self.max_steps:
+                done = True
+
+
+        return self.state, reward, done, valid_move
 
 
     def sample_action(self):
@@ -44,14 +66,15 @@ class Environment:
         return np.array([np.random.choice(dim, 1)[:] for dim in entry_dims])[:,-1]
 
     def action_shape(self):
-        return self.dimension_configuration[:1]
+        return self.dimension_configuration[1:]
 
     def state_shape(self):
         return self.dimension_configuration
 
     def reset(self):
-        self.state = np.zeros(self.dimension_configuration, dtype=np.uint8)
-
+        self.state = np.zeros(self.dimension_configuration, dtype=np.int8)
+        self.total_steps = 0
+        return self.state
 
 
     def pre_calculate_check_line_vectors(self):
