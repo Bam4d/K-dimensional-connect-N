@@ -10,7 +10,7 @@ def test_sample_from_envs():
     Play a game completely randomly
     :return:
     """
-    env = KDimConnectN(dimension_configuration=(6, 7,8,9,10), N=4)
+    env = KDimConnectN(dimension_configuration=(6,7,8,9,10), N=4)
 
     for i in range(0, iterations):
 
@@ -25,6 +25,8 @@ def test_sample_from_envs():
             else:
                 player = 1
 
+            # If valid move is returned as false, this means that the chosen location
+            # is "full" and a token cannot be placed there
             valid_move = False
             while not valid_move:
                 action = env.sample_action()

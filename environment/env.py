@@ -22,7 +22,7 @@ class KDimConnectN:
 
     def step(self, action, player):
         done = False
-        reward = -1
+        reward = -0.1
         # Update the state here
         assert np.abs(player) == 1, "player can only have value 1 or -1"
 
@@ -38,10 +38,8 @@ class KDimConnectN:
         valid_move = True
         if token_fall_coordinate >= self.dimension_configuration[0]:
             valid_move = False
+            reward = -20 # state will not change, but we should punish the algorithm for choosing a bad position
         else:
-
-            # Reward for making a valid move ?
-            # reward = 1
 
             token_final_location = np.concatenate((np.array([token_fall_coordinate], dtype=np.int64), action))
 

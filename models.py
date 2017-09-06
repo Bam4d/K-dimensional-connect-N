@@ -139,6 +139,9 @@ class DeepQ:
         params = self.model.get_params()
         self.target_model.set_params(params)
 
+    def reset_experience(self):
+        self.episode_state_history = list()
+
     def add_experience(self, experience):
         if len(self.episode_state_history) > self.episode_state_history_max:
             self.episode_state_history.pop(0)
@@ -150,3 +153,20 @@ class DeepQ:
     def set_session(self,session):
         self.model.set_session(session)
         self.target_model.set_session(session)
+
+class RandomPlayer:
+
+    def __init__(self, env):
+        self.env = env
+
+    def train(self):
+        return 0.0
+
+    def add_experience(self, experience):
+        pass
+
+    def update_target_network(self):
+        pass
+
+    def sample_action(self, state, epsilon):
+        return self.env.sample_action()
