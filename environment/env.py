@@ -22,7 +22,7 @@ class KDimConnectN:
 
     def step(self, action, player):
         done = False
-        reward = -0.1
+        reward = 0.0
         # Update the state here
         assert np.abs(player) == 1, "player can only have value 1 or -1"
 
@@ -49,7 +49,7 @@ class KDimConnectN:
                 done = True
 
                 # Reward for winning
-                reward = 20
+                reward = 200
 
             self.total_steps += 1
             if self.total_steps >= self.max_steps:

@@ -11,6 +11,17 @@ class FeedForward:
         else:
             self.scope = str(uuid.uuid4())
 
+        self.param_copy_ops = []
+
+    # create a graph here that allows the parameters of the entire network to be set
+    def create_set_params_operation(self):
+        param_copy_ops = []
+        for current_param in self.get_params():
+            new_param_placeholder = tf.placeholder(tf.float32, shape=current_param.shape)
+            param_copy_ops.append((current_param.assign(new_param_placeholder), new_param_placeholder))
+
+        return param_copy_ops
+
     def set_session(self, session):
         self.session = session
 
@@ -44,10 +55,10 @@ class FeedForward:
         return l2_reg_sum
 
     def set_params(self, new_params):
+        for copy_op, input in zip(self.param_copy_ops, new_params):
+            self.session.run(copy_op[0], feed_dict={ copy_op[1]: self.session.run(input) })
 
-        for current_param, new_param in zip(self.get_params(), new_params):
-            op = self.session.run(new_param)
-            self.session.run(current_param.assign(op))
+
 
     def get_params(self):
         return sorted([t for t in tf.trainable_variables() if t.name.startswith(self.scope)], key=lambda v: v.name)
@@ -77,6 +88,7 @@ class SimpleFeedForward(FeedForward):
             self.train_op = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
             self.predict_op = pred
 
+            self.param_copy_ops = self.create_set_params_operation()
 
 
     def predict(self, state):
@@ -156,8 +168,8 @@ class DeepQ:
 
 class RandomPlayer:
 
-    def __init__(self, env):
-        self.env = env
+    def __init__(self, n_outputs):
+        self.n_outputs = n_outputs
 
     def train(self):
         return 0.0
@@ -169,4 +181,4 @@ class RandomPlayer:
         pass
 
     def sample_action(self, state, epsilon):
-        return self.env.sample_action()
+        return np.random.choice(self.n_outputs)
